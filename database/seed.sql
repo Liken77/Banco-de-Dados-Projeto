@@ -1,14 +1,16 @@
 USE biblioteca;
 
-INSERT IGNORE INTO cidade (id_cidade, cep, estado, pais, nome) VALUES
-(1, '99700-000', 'RS', 'Brasil', 'Erechim'),
-(2, '99930-000', 'RS', 'Brasil', 'Estação'),
-(3, '99010-000', 'RS', 'Brasil', 'Passo Fundo');
+INSERT IGNORE INTO cidade (id_cidade, nome, estado, pais) VALUES
+(1, 'Erechim', 'RS', 'Brasil'),
+(2, 'Estação', 'RS', 'Brasil'),
+(3, 'Passo Fundo', 'RS', 'Brasil');
 
-INSERT IGNORE INTO endereco (id_endereco, rua, bairro, numero, id_cidade) VALUES
-(1, 'Rua das Flores', 'Centro', '123', 1),
-(2, 'Rua dos Pioneiros', 'Centro', '45', 2),
-(3, 'Avenida Brasil', 'Bela Vista', '900', 3);
+INSERT IGNORE INTO endereco (
+    id_endereco, cep, rua, bairro, numero, complemento, id_cidade
+) VALUES
+(1, '99700-000', 'Rua das Flores', 'Centro', '123', NULL, 1),
+(2, '99930-000', 'Rua dos Pioneiros', 'Centro', '45', 'Apartamento 2', 2),
+(3, '99010-000', 'Avenida Brasil', 'Bela Vista', '900', NULL, 3);
 
 INSERT IGNORE INTO usuario (id_usuario, nome, email, telefone, id_endereco) VALUES
 (1, 'Ana Pereira', 'ana.pereira@example.com', '54999990001', 1),
@@ -43,12 +45,24 @@ INSERT IGNORE INTO livro_autor (id_livro, id_autor) VALUES
 (4, 1),
 (4, 2);
 
-INSERT IGNORE INTO livro_assunto (id_livro, id_assunto, nivel_relevancia, comentario) VALUES
+INSERT IGNORE INTO livro_assunto (
+    id_livro, id_assunto, nivel_relevancia, comentario
+) VALUES
 (1, 1, 5, 'Banco de dados e modelagem relacional.'),
 (2, 2, 5, 'Introdução aos fundamentos de programação.'),
 (3, 3, 5, 'Conteúdo histórico.'),
 (4, 1, 4, 'Arquitetura aplicada ao desenvolvimento de sistemas.'),
-(4, 2, 3, 'Relaciona conceitos de programação e organização de software.');
+(4, 2, 3, 'Relaciona programação e organização de software.');
+
+INSERT IGNORE INTO exemplar (
+    id_exemplar, id_livro, codigo_tombo, data_aquisicao, status
+) VALUES
+(1, 1, 'BDR-001', '2024-02-10', 'DISPONIVEL'),
+(2, 1, 'BDR-002', '2024-02-10', 'DISPONIVEL'),
+(3, 2, 'PRG-001', '2024-03-15', 'DISPONIVEL'),
+(4, 3, 'HIS-001', '2024-04-20', 'EMPRESTADO'),
+(5, 4, 'ARQ-001', '2025-01-12', 'EMPRESTADO'),
+(6, 4, 'ARQ-002', '2025-01-12', 'MANUTENCAO');
 
 INSERT IGNORE INTO emprestimo (
     id_emprestimo,
@@ -63,8 +77,9 @@ INSERT IGNORE INTO emprestimo (
 (2, 2, '2026-08-10', '2026-08-17', NULL, 5.00, 'ATRASADO'),
 (3, 3, '2026-08-15', '2026-08-22', NULL, 0.00, 'ABERTO');
 
-INSERT IGNORE INTO emprestimo_livro (id_emprestimo, id_livro, quantidade) VALUES
-(1, 1, 1),
-(1, 2, 1),
-(2, 3, 1),
-(3, 4, 1);
+INSERT IGNORE INTO emprestimo_exemplar (id_emprestimo, id_exemplar) VALUES
+(1, 1),
+(1, 3),
+(2, 4),
+(3, 5);
+

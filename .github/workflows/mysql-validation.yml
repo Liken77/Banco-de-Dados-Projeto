@@ -1,0 +1,50 @@
+name: MySQL Validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -uroot -proot --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=12
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v7
+
+      - name: Validar estrutura
+        run: >-
+          docker run --rm --network host -i mysql:8.4
+          mysql -h127.0.0.1 -P3306 -uroot -proot
+          < database/schema.sql
+
+      - name: Validar dados de demonstração
+        run: >-
+          docker run --rm --network host -i mysql:8.4
+          mysql -h127.0.0.1 -P3306 -uroot -proot
+          < database/seed.sql
+
+      - name: Validar consultas
+        run: >-
+          docker run --rm --network host -i mysql:8.4
+          mysql -h127.0.0.1 -P3306 -uroot -proot
+          < database/queries.sql
+

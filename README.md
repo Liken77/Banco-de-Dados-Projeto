@@ -2,18 +2,18 @@
 
 Projeto acadêmico desenvolvido na disciplina de **Banco de Dados I** do curso de **Análise e Desenvolvimento de Sistemas no IFRS Erechim**.
 
-O objetivo do trabalho é modelar um banco de dados relacional para controle de uma biblioteca, contemplando usuários, endereços, livros, autores, editoras, assuntos e empréstimos.
+O repositório apresenta a evolução de um primeiro modelo relacional para uma versão revisada de um sistema de biblioteca, contemplando catálogo, autores, assuntos, usuários, endereços, exemplares físicos e empréstimos.
 
 ## O que este projeto demonstra
 
 - modelagem de entidades e relacionamentos;
-- chaves primárias e estrangeiras;
+- normalização e separação de responsabilidades;
 - relacionamentos 1:N e N:N;
-- normalização de dados;
-- criação de tabelas com MySQL;
-- constraints e integridade referencial;
-- operações `INSERT`, `UPDATE` e `SELECT`;
-- consultas com `JOIN`, agregações e `GROUP BY`.
+- chaves primárias, estrangeiras e compostas;
+- constraints de domínio e integridade referencial;
+- dados de demonstração idempotentes;
+- consultas com `JOIN`, agregações, `GROUP BY` e `CASE`;
+- validação automática dos scripts com MySQL no GitHub Actions.
 
 ## Modelo atual
 
@@ -24,64 +24,81 @@ erDiagram
     EDITORA ||--o{ LIVRO : publica
     LIVRO }o--o{ AUTOR : escrito_por
     LIVRO }o--o{ ASSUNTO : classificado_em
+    LIVRO ||--o{ EXEMPLAR : possui
     USUARIO ||--o{ EMPRESTIMO : realiza
-    EMPRESTIMO ||--o{ EMPRESTIMO_LIVRO : contem
-    LIVRO ||--o{ EMPRESTIMO_LIVRO : participa
+    EMPRESTIMO }o--o{ EXEMPLAR : inclui
 ```
 
-## Estrutura do repositório
+## Principais correções da evolução
+
+| Problema da primeira versão | Solução atual |
+|---|---|
+| CEP associado à cidade | CEP pertence ao endereço |
+| Empréstimo ligado ao título por quantidade | Empréstimo referencia exemplares físicos identificados por tombo |
+| Nomes e tipos inconsistentes | Convenção única em `snake_case` e tipos adequados |
+| Poucas regras de integridade | Chaves únicas, `CHECK`, ações de FK e datas coerentes |
+| Script único e difícil de testar | Estrutura, dados e consultas separados |
+
+## Estrutura
 
 ```text
-Cod/
-└── ProjectCod              # versão original do trabalho acadêmico
-
-database/
-├── schema.sql              # estrutura revisada e corrigida
-├── seed.sql                # dados de demonstração
-└── queries.sql             # consultas de exemplo
+.
+├── .github/workflows/
+│   └── mysql-validation.yml
+├── database/
+│   ├── schema.sql
+│   ├── seed.sql
+│   └── queries.sql
+├── legacy/
+│   └── original-submission.sql
+├── .env.example
+└── compose.yml
 ```
 
-## Evolução do projeto
+O arquivo em `legacy/` é a entrega original da disciplina. Ele foi mantido para que a evolução da modelagem possa ser comparada, mas não deve ser usado para criar o banco atual.
 
-O arquivo `Cod/ProjectCod` foi mantido propositalmente como registro da versão entregue durante a disciplina.
+## Executando com Docker
 
-A pasta `database/` contém uma revisão posterior da modelagem, corrigindo inconsistências da primeira versão e aplicando práticas que aprendi depois, como:
+```bash
+git clone https://github.com/Liken77/Banco-de-Dados-Projeto.git
+cd Banco-de-Dados-Projeto
+cp .env.example .env
+docker compose up -d
+```
 
-- nomenclatura consistente;
-- tipos de dados mais adequados;
-- relacionamento explícito entre livros e autores;
-- chaves compostas nas tabelas associativas;
-- campos de empréstimo mais claros;
-- índices e restrições de unicidade;
-- scripts separados por responsabilidade.
+Na primeira execução, o MySQL aplica automaticamente `schema.sql` e `seed.sql`.
 
-## Executando
+Para executar as consultas:
 
-Com o MySQL disponível, execute os scripts nesta ordem:
+```bash
+docker compose exec -T database \
+  mysql -uroot -p"${MYSQL_ROOT_PASSWORD:-root}" \
+  < database/queries.sql
+```
+
+Para reiniciar o banco do zero:
+
+```bash
+docker compose down -v
+docker compose up -d
+```
+
+O comando com `-v` remove os dados locais do container e deve ser usado apenas quando a intenção for recriar o banco.
+
+## Executando com MySQL instalado
 
 ```bash
 mysql -u root -p < database/schema.sql
-mysql -u root -p biblioteca < database/seed.sql
-mysql -u root -p biblioteca < database/queries.sql
+mysql -u root -p < database/seed.sql
+mysql -u root -p < database/queries.sql
 ```
 
-Também é possível abrir os arquivos diretamente no MySQL Workbench ou em outra ferramenta compatível.
+## Validação automática
 
-## Principais entidades
-
-| Entidade | Responsabilidade |
-|---|---|
-| `cidade` | cidades utilizadas nos endereços |
-| `endereco` | endereço associado ao usuário |
-| `usuario` | pessoas que utilizam a biblioteca |
-| `editora` | editoras responsáveis pelos livros |
-| `livro` | informações do acervo |
-| `autor` | autores das obras |
-| `assunto` | categorias e assuntos do acervo |
-| `emprestimo` | registro de empréstimos por usuário |
-| `emprestimo_livro` | livros vinculados a cada empréstimo |
+O workflow `MySQL Validation` sobe uma instância limpa do MySQL 8.4 e executa os três scripts em cada pull request. Erros de sintaxe, constraints inválidas ou consultas quebradas impedem a validação.
 
 ## Autor
 
 **Pedro Henrique Andrade**  
 Análise e Desenvolvimento de Sistemas — IFRS Erechim
+
